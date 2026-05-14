@@ -12,8 +12,8 @@ function FoodForm({ onAddFood }) {
     name: "",
     quantity: 1,
     expiry_date: "",
-    category: "vegetable",
-    processing_level: "fresh",
+    category: "",
+    processing_level: "",
     nutrition_tags: [],
   });
 
@@ -130,11 +130,7 @@ function FoodForm({ onAddFood }) {
 
     const nutritionScore = form.nutrition_tags.length * 2;
 
-    const priorityScore = Math.min(
-      100,
-
-      nutritionScore * 10,
-    );
+    const priorityScore = Math.min(100, nutritionScore * 10);
 
     // ==================================
     // Create Food
@@ -163,9 +159,9 @@ function FoodForm({ onAddFood }) {
 
       quantity: 1,
 
-      category: "vegetable",
+      category: "",
 
-      processing_level: "fresh",
+      processing_level: "",
 
       nutrition_tags: [],
 
@@ -446,6 +442,8 @@ function FoodForm({ onAddFood }) {
                 transition-all
               "
             >
+              <option value="">Select</option>
+
               <option value="vegetable">Vegetable</option>
 
               <option value="fruit">Fruit</option>
@@ -504,6 +502,8 @@ function FoodForm({ onAddFood }) {
                 transition-all
               "
             >
+              <option value="">Select</option>
+
               <option value="fresh">Fresh</option>
 
               <option value="processed">Processed</option>
