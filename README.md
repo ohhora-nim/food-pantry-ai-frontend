@@ -1,4 +1,6 @@
-# Frontend - React
+# Gemma 4 Good Hackathon
+
+## - Food Pantry AI - Frontend
 
 ### Install
 
