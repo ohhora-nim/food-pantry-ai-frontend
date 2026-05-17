@@ -1,7 +1,7 @@
 // =========================================
 // RecommendedFoods.jsx
-// AI Food Recommendations Component
-// Displays saved AI explanations from localStorage via PantryContext
+// Recommendation Cards Only
+// Page-level stats/actions live in RecommendationsPage.jsx
 // =========================================
 
 import { useMemo } from "react";
@@ -19,7 +19,6 @@ import {
   CheckCircle2,
   PackagePlus,
   Brain,
-  WandSparkles,
 } from "lucide-react";
 
 // =========================================
@@ -47,7 +46,7 @@ function EmptyState() {
 
       <p className="text-slate-500 max-w-2xl mx-auto leading-relaxed">
         Add pantry foods to receive fast recommendations from your Smart Food
-        Database. Then generate AI explanations for richer reasons.
+        Database. Then generate AI explanations from the Recommendations page.
       </p>
     </div>
   );
@@ -115,60 +114,6 @@ function getPriorityBadge(score = 0) {
 }
 
 // =========================================
-// Stat Card
-// =========================================
-
-function StatCard({ icon: Icon, label, value, subtitle, color = "emerald" }) {
-  const colors = {
-    emerald: "bg-emerald-100 text-emerald-600",
-    green: "bg-green-100 text-green-600",
-    blue: "bg-blue-100 text-blue-600",
-    amber: "bg-amber-100 text-amber-600",
-    rose: "bg-rose-100 text-rose-600",
-    violet: "bg-violet-100 text-violet-600",
-    cyan: "bg-cyan-100 text-cyan-600",
-    slate: "bg-slate-100 text-slate-600",
-  };
-
-  return (
-    <div
-      className="
-        rounded-3xl
-        border
-        border-slate-200
-        bg-white
-        p-6
-        shadow-sm
-        transition-all
-        hover:shadow-lg
-      "
-    >
-      <div className="flex items-center justify-between mb-5">
-        <div
-          className={`
-            w-12
-            h-12
-            rounded-2xl
-            flex
-            items-center
-            justify-center
-            ${colors[color] || colors.emerald}
-          `}
-        >
-          <Icon size={24} />
-        </div>
-
-        <span className="text-sm text-slate-400">{label}</span>
-      </div>
-
-      <h3 className="text-4xl font-black text-slate-800">{value}</h3>
-
-      <p className="text-slate-500 mt-2">{subtitle}</p>
-    </div>
-  );
-}
-
-// =========================================
 // Recommendation Card
 // =========================================
 
@@ -204,9 +149,7 @@ function RecommendationCard({ food, onAddFood }) {
         hover:-translate-y-1
       "
     >
-      {/* =============================== */}
       {/* Header */}
-      {/* =============================== */}
 
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
@@ -269,9 +212,7 @@ function RecommendationCard({ food, onAddFood }) {
         </div>
       </div>
 
-      {/* =============================== */}
       {/* Scores */}
-      {/* =============================== */}
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
@@ -327,9 +268,7 @@ function RecommendationCard({ food, onAddFood }) {
         </div>
       </div>
 
-      {/* =============================== */}
       {/* Priority Badge */}
-      {/* =============================== */}
 
       <div className="mb-6">
         <span
@@ -351,9 +290,7 @@ function RecommendationCard({ food, onAddFood }) {
         </span>
       </div>
 
-      {/* =============================== */}
       {/* Nutrition Tags */}
-      {/* =============================== */}
 
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
@@ -388,9 +325,7 @@ function RecommendationCard({ food, onAddFood }) {
         )}
       </div>
 
-      {/* =============================== */}
       {/* Benefits */}
-      {/* =============================== */}
 
       {food.benefits?.length > 0 && (
         <div className="mb-6">
@@ -429,9 +364,7 @@ function RecommendationCard({ food, onAddFood }) {
         </div>
       )}
 
-      {/* =============================== */}
       {/* Explanation / Reason */}
-      {/* =============================== */}
 
       <div
         className={`
@@ -468,9 +401,7 @@ function RecommendationCard({ food, onAddFood }) {
         </p>
       </div>
 
-      {/* =============================== */}
       {/* Add Button */}
-      {/* =============================== */}
 
       {onAddFood && (
         <button
@@ -510,75 +441,11 @@ function RecommendationCard({ food, onAddFood }) {
 // =========================================
 
 export default function RecommendedFoods() {
-  const {
-    recommendations,
-    addPantryFood,
-    generateExplanations,
-    loadingFeature,
-  } = usePantry();
-
-  const isGeneratingExplanations = loadingFeature === "explanations";
-
-  // =======================================
-  // Empty
-  // =======================================
+  const { recommendations, addPantryFood } = usePantry();
 
   if (!recommendations || recommendations.length === 0) {
     return <EmptyState />;
   }
-
-  // =======================================
-  // Stats
-  // =======================================
-
-  const stats = useMemo(() => {
-    const total = recommendations.length;
-
-    const avgNutrition =
-      total > 0
-        ? Math.round(
-            recommendations.reduce(
-              (sum, food) => sum + Number(food.nutrition_score || 0),
-              0,
-            ) / total,
-          )
-        : 0;
-
-    const avgPriority =
-      total > 0
-        ? Math.round(
-            recommendations.reduce(
-              (sum, food) => sum + Number(food.priority_score || 0),
-              0,
-            ) / total,
-          )
-        : 0;
-
-    const freshCount = recommendations.filter(
-      (food) => food.processing_level === "fresh",
-    ).length;
-
-    const highPriority = recommendations.filter(
-      (food) => Number(food.priority_score || 0) >= 80,
-    ).length;
-
-    const explainedCount = recommendations.filter((food) =>
-      Boolean(food.explanation),
-    ).length;
-
-    return {
-      total,
-      avgNutrition,
-      avgPriority,
-      freshCount,
-      highPriority,
-      explainedCount,
-    };
-  }, [recommendations]);
-
-  // =======================================
-  // Add Recommended Food to Pantry
-  // =======================================
 
   async function handleAddRecommendedFood(food) {
     const today = new Date();
@@ -594,247 +461,17 @@ export default function RecommendedFoods() {
     });
   }
 
-  // =======================================
-  // UI
-  // =======================================
-
   return (
-    <div className="space-y-8">
-      {/* ================================= */}
-      {/* Hero */}
-      {/* ================================= */}
-
-      <section
-        className="
-          relative
-          overflow-hidden
-          rounded-3xl
-          bg-gradient-to-br
-          from-violet-500
-          via-purple-500
-          to-fuchsia-500
-          p-8
-          text-white
-          shadow-xl
-        "
-      >
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,white,transparent_40%)]" />
-
-        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-8">
-          <div>
-            <div
-              className="
-                inline-flex
-                items-center
-                gap-2
-                rounded-full
-                bg-white/20
-                px-4
-                py-2
-                text-sm
-                font-semibold
-                backdrop-blur-md
-                mb-5
-              "
-            >
-              <Sparkles size={16} />
-              AI Food Recommendation Engine
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl font-black leading-tight">
-              Recommended Foods
-            </h1>
-
-            <p className="mt-5 max-w-3xl text-lg text-violet-50 leading-relaxed">
-              Fast recommendations come from your Smart Food Database. Optional
-              AI explanations are generated only when requested and saved in
-              localStorage.
-            </p>
-          </div>
-
-          <div
-            className="
-              rounded-3xl
-              bg-white/15
-              border
-              border-white/20
-              backdrop-blur-md
-              p-8
-              text-center
-              min-w-[260px]
-            "
-          >
-            <p className="text-sm uppercase tracking-wide text-violet-50 mb-3">
-              Recommendations
-            </p>
-
-            <h2 className="text-6xl font-black">{stats.total}</h2>
-          </div>
-        </div>
-      </section>
-
-      {/* ================================= */}
-      {/* Action Bar */}
-      {/* ================================= */}
-
-      <section
-        className="
-          rounded-3xl
-          border
-          border-violet-100
-          bg-violet-50
-          p-6
-          shadow-sm
-        "
-      >
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4">
-            <div
-              className="
-                w-14
-                h-14
-                rounded-2xl
-                bg-violet-100
-                text-violet-600
-                flex
-                items-center
-                justify-center
-                flex-shrink-0
-              "
-            >
-              <Brain size={28} />
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-black text-violet-900 mb-2">
-                AI Explanations
-              </h2>
-
-              <p className="text-slate-700 leading-relaxed">
-                {stats.explainedCount > 0
-                  ? `${stats.explainedCount} recommendations have saved AI explanations.`
-                  : "Generate AI explanations to replace short rule-based reasons with richer human-like explanations."}
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={generateExplanations}
-            disabled={isGeneratingExplanations}
-            className="
-              inline-flex
-              items-center
-              justify-center
-              gap-3
-              rounded-2xl
-              bg-gradient-to-r
-              from-violet-500
-              to-purple-600
-              px-6
-              py-4
-              font-bold
-              text-white
-              shadow-lg
-              transition-all
-              hover:from-violet-600
-              hover:to-purple-700
-              hover:shadow-xl
-              disabled:cursor-not-allowed
-              disabled:opacity-60
-            "
-          >
-            {isGeneratingExplanations ? (
-              <>
-                <WandSparkles size={20} className="animate-pulse" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <WandSparkles size={20} />
-                Generate AI Explanations
-              </>
-            )}
-          </button>
-        </div>
-      </section>
-
-      {/* ================================= */}
-      {/* Stats */}
-      {/* ================================= */}
-
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-6">
-        <StatCard
-          icon={Sparkles}
-          label="AI Foods"
-          value={stats.total}
-          subtitle="Recommended Foods"
-          color="violet"
-        />
-
-        <StatCard
-          icon={HeartPulse}
-          label="Nutrition"
-          value={stats.avgNutrition}
-          subtitle="Average Nutrition"
-          color="emerald"
-        />
-
-        <StatCard
-          icon={Star}
-          label="Priority"
-          value={stats.avgPriority}
-          subtitle="Average Priority"
-          color="amber"
-        />
-
-        <StatCard
-          icon={Leaf}
-          label="Fresh"
-          value={stats.freshCount}
-          subtitle="Fresh Whole Foods"
-          color="green"
-        />
-
-        <StatCard
-          icon={Brain}
-          label="Explained"
-          value={stats.explainedCount}
-          subtitle="AI Explanations"
-          color="blue"
-        />
-      </section>
-
-      {/* ================================= */}
-      {/* Recommendation Cards */}
-      {/* ================================= */}
-
-      <section>
-        <div className="mb-6">
-          <h2 className="text-3xl font-black text-slate-800">
-            Personalized Recommendations
-          </h2>
-
-          <p className="text-slate-500 mt-1">
-            Add recommended foods to your pantry to improve your nutrition
-            profile.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {recommendations.map((food, index) => (
-            <RecommendationCard
-              key={`${food.name}-${index}`}
-              food={food}
-              onAddFood={handleAddRecommendedFood}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* ================================= */}
-      {/* Bottom Insight */}
-      {/* ================================= */}
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {recommendations.map((food, index) => (
+          <RecommendationCard
+            key={`${food.name}-${index}`}
+            food={food}
+            onAddFood={handleAddRecommendedFood}
+          />
+        ))}
+      </div>
 
       <section
         className="

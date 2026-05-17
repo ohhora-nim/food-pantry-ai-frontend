@@ -1,7 +1,8 @@
 // =========================================
 // RecommendationsPage.jsx
 // AI Food Recommendations Page
-// Fast recommendations + on-demand AI Explanations
+// Page-level stats/actions only
+// RecommendedFoods.jsx displays cards only
 // =========================================
 
 import { useMemo } from "react";
@@ -15,7 +16,6 @@ import {
   Sparkles,
   Apple,
   Salad,
-  ShieldCheck,
   HeartPulse,
   Star,
   Brain,
@@ -53,7 +53,9 @@ export default function RecommendationsPage() {
   // =======================================
 
   const stats = useMemo(() => {
-    if (!recommendations) {
+    const total = recommendations?.length || 0;
+
+    if (total === 0) {
       return {
         totalRecommendations: 0,
         avgPriority: 0,
@@ -63,34 +65,26 @@ export default function RecommendationsPage() {
       };
     }
 
-    const total = recommendations.length || 0;
+    const avgPriority = Math.round(
+      recommendations.reduce(
+        (sum, food) => sum + Number(food.priority_score || 0),
+        0,
+      ) / total,
+    );
 
-    const avgPriority =
-      total > 0
-        ? Math.round(
-            recommendations.reduce(
-              (sum, food) => sum + (food.priority_score || 0),
-              0,
-            ) / total,
-          )
-        : 0;
-
-    const avgNutrition =
-      total > 0
-        ? Math.round(
-            recommendations.reduce(
-              (sum, food) => sum + (food.nutrition_score || 0),
-              0,
-            ) / total,
-          )
-        : 0;
+    const avgNutrition = Math.round(
+      recommendations.reduce(
+        (sum, food) => sum + Number(food.nutrition_score || 0),
+        0,
+      ) / total,
+    );
 
     const freshFoods = recommendations.filter(
       (food) => food.processing_level === "fresh",
     ).length;
 
-    const explainedFoods = recommendations.filter(
-      (food) => food.explanation,
+    const explainedFoods = recommendations.filter((food) =>
+      Boolean(food.explanation),
     ).length;
 
     return {
@@ -102,15 +96,7 @@ export default function RecommendationsPage() {
     };
   }, [recommendations]);
 
-  // =======================================
-  // Pantry Health
-  // =======================================
-
   const pantryHealth = nutrition?.pantry_health_score || 0;
-
-  // =======================================
-  // Pantry Count
-  // =======================================
 
   const pantryCount = pantryFoods?.length || 0;
 
@@ -119,6 +105,10 @@ export default function RecommendationsPage() {
   // =======================================
 
   async function handleGenerateExplanations() {
+    if (!recommendations || recommendations.length === 0) {
+      return;
+    }
+
     await generateExplanations();
   }
 
@@ -185,7 +175,9 @@ export default function RecommendationsPage() {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* ================================= */}
+        {/* Page-level Actions */}
+        {/* ================================= */}
 
         <div className="flex flex-col sm:flex-row gap-3">
           <button
@@ -268,6 +260,29 @@ export default function RecommendationsPage() {
       </div>
 
       {/* ================================= */}
+      {/* No Pantry Warning */}
+      {/* ================================= */}
+
+      {pantryCount === 0 && (
+        <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-amber-800">
+          <div className="flex items-start gap-3">
+            <AlertCircle size={22} className="mt-0.5 flex-shrink-0" />
+
+            <div>
+              <h2 className="font-bold mb-1">
+                Add pantry foods for better recommendations
+              </h2>
+
+              <p>
+                You can still see general recommendations, but pantry-based
+                recommendations become smarter after adding foods.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ================================= */}
       {/* No Recommendations Warning */}
       {/* ================================= */}
 
@@ -280,8 +295,8 @@ export default function RecommendationsPage() {
               <h2 className="font-bold mb-1">No recommendations yet</h2>
 
               <p>
-                Add pantry foods or click Refresh Recommendations to generate
-                food suggestions.
+                Click Refresh Recommendations to generate food suggestions from
+                your Smart Food Database.
               </p>
             </div>
           </div>
@@ -305,12 +320,9 @@ export default function RecommendationsPage() {
           </div>
 
           <p className="max-w-4xl text-lg leading-relaxed text-emerald-50">
-            Recommendations are generated quickly using your Smart Food
-            Database. Click{" "}
-            <span className="font-semibold">Generate AI Explanations</span> to
-            call the backend{" "}
-            <span className="font-semibold">POST /ai/explanations</span>{" "}
-            endpoint and add richer human-like explanations.
+            Recommendations load quickly from your Smart Food Database. Click{" "}
+            <span className="font-semibold">Generate AI Explanations</span> only
+            when you want richer human-like reasoning from Gemma.
           </p>
         </div>
       </section>
@@ -343,7 +355,7 @@ export default function RecommendationsPage() {
 
           <h2 className="text-4xl font-bold">{stats.totalRecommendations}</h2>
 
-          <p className="text-slate-500 mt-2">Recommendations</p>
+          <p className="text-slate-500 mt-2">Recommended Foods</p>
         </div>
 
         {/* Nutrition */}
@@ -359,7 +371,7 @@ export default function RecommendationsPage() {
 
           <h2 className="text-4xl font-bold">{stats.avgNutrition}</h2>
 
-          <p className="text-slate-500 mt-2">Avg Nutrition Score</p>
+          <p className="text-slate-500 mt-2">Average Nutrition</p>
         </div>
 
         {/* Priority */}
@@ -375,7 +387,7 @@ export default function RecommendationsPage() {
 
           <h2 className="text-4xl font-bold">{stats.avgPriority}</h2>
 
-          <p className="text-slate-500 mt-2">Avg Priority Score</p>
+          <p className="text-slate-500 mt-2">Average Priority</p>
         </div>
 
         {/* Fresh Foods */}
@@ -412,7 +424,7 @@ export default function RecommendationsPage() {
       </section>
 
       {/* ================================= */}
-      {/* Pantry Health Insight */}
+      {/* Recommendation Engine Info */}
       {/* ================================= */}
 
       <section className="rounded-3xl bg-white border border-slate-200 p-8 shadow-sm">
@@ -422,8 +434,7 @@ export default function RecommendationsPage() {
 
             <p className="text-slate-500 mt-2 max-w-3xl leading-relaxed">
               The app first uses the fast Smart Food Database to recommend
-              foods. AI explanations are optional and generated only when you
-              request them.
+              foods. AI explanations are optional and saved after generation.
             </p>
           </div>
 
@@ -495,7 +506,7 @@ export default function RecommendationsPage() {
       </section>
 
       {/* ================================= */}
-      {/* Recommendations Dashboard */}
+      {/* Recommendations Cards */}
       {/* ================================= */}
 
       <section className="rounded-3xl bg-white border border-slate-200 p-6 sm:p-8 shadow-sm">
@@ -505,8 +516,8 @@ export default function RecommendationsPage() {
           </h2>
 
           <p className="text-slate-500 mt-1">
-            Fast recommendations are shown immediately. AI explanations appear
-            after clicking Generate AI Explanations.
+            Recommendations show immediately. AI explanations appear after
+            clicking Generate AI Explanations above.
           </p>
         </div>
 

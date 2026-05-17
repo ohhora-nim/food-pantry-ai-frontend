@@ -80,7 +80,7 @@ export default function PantryCard({ food, onDelete }) {
   const expiry = getExpiryStatus(food.expiry_score || 0);
 
   const ExpiryIcon = expiry.icon;
-
+  
   return (
     <article
       className={`

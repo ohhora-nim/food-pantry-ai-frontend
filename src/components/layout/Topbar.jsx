@@ -1,19 +1,12 @@
 // =========================================
 // Topbar.jsx
 // Responsive Top Navigation Bar
+// No global refresh button
 // =========================================
 
 import { useLocation } from "react-router-dom";
 
-import {
-  Bell,
-  RefreshCw,
-  Search,
-  Sparkles,
-  Clock3,
-  Wifi,
-  WifiOff,
-} from "lucide-react";
+import { Bell, Search, Sparkles, Clock3, Wifi, WifiOff } from "lucide-react";
 
 import { usePantry } from "../../context/PantryContext";
 
@@ -26,26 +19,32 @@ const pageMeta = {
     title: "Dashboard",
     subtitle: "AI-powered food intelligence overview",
   },
+
   "/pantry": {
     title: "Pantry",
     subtitle: "Manage pantry foods and freshness",
   },
+
   "/meals": {
     title: "Meals",
     subtitle: "AI-generated meal planning",
   },
+
   "/nutrition": {
     title: "Nutrition",
     subtitle: "Pantry nutrition analytics",
   },
+
   "/waste": {
     title: "Waste Forecast",
     subtitle: "Food waste risk intelligence",
   },
+
   "/coach": {
     title: "AI Coach",
     subtitle: "Personalized healthy eating guidance",
   },
+
   "/recommendations": {
     title: "Recommendations",
     subtitle: "Smart food recommendations",
@@ -75,7 +74,7 @@ function formatDate(value) {
 export default function Topbar() {
   const location = useLocation();
 
-  const { loading, error, lastUpdated, fetchDashboard } = usePantry();
+  const { error, lastUpdated } = usePantry();
 
   const meta = pageMeta[location.pathname] || pageMeta["/dashboard"];
 
@@ -176,7 +175,7 @@ export default function Topbar() {
         </div>
 
         {/* ================================= */}
-        {/* Center: Search */}
+        {/* Center: Search Placeholder */}
         {/* ================================= */}
 
         <div
@@ -231,7 +230,7 @@ export default function Topbar() {
         </div>
 
         {/* ================================= */}
-        {/* Right: Status + Actions */}
+        {/* Right: Status */}
         {/* ================================= */}
 
         <div
@@ -327,45 +326,6 @@ export default function Topbar() {
           )}
 
           {/* ============================= */}
-          {/* Refresh */}
-          {/* ============================= */}
-
-          <button
-            type="button"
-            onClick={fetchDashboard}
-            disabled={loading}
-            className="
-              inline-flex
-              h-11
-              w-11
-              items-center
-              justify-center
-
-              rounded-2xl
-
-              border
-              border-slate-200
-
-              bg-white
-
-              text-slate-600
-
-              shadow-sm
-
-              transition-all
-
-              hover:bg-slate-50
-              hover:text-slate-900
-
-              disabled:opacity-60
-              disabled:cursor-not-allowed
-            "
-            aria-label="Refresh dashboard"
-          >
-            <RefreshCw size={19} className={loading ? "animate-spin" : ""} />
-          </button>
-
-          {/* ============================= */}
           {/* Notifications */}
           {/* ============================= */}
 
@@ -447,7 +407,7 @@ export default function Topbar() {
               shadow-sm
             "
           >
-            AI
+            Guest
           </div>
         </div>
       </div>
