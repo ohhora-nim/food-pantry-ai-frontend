@@ -2,6 +2,7 @@
 // DashboardPage.jsx
 // AI Pantry Executive Dashboard
 // Fast dashboard + on-demand AI Summary
+// Error is shown as a warning banner, not a blocking page
 // =========================================
 
 import { useMemo } from "react";
@@ -39,6 +40,7 @@ export default function DashboardPage() {
     loadingFeature,
     error,
     generateSummary,
+    clearError,
   } = usePantry();
 
   // =======================================
@@ -46,6 +48,8 @@ export default function DashboardPage() {
   // =======================================
 
   const isGeneratingSummary = loadingFeature === "summary";
+
+  const isLoadingDashboard = loadingFeature === "dashboard";
 
   // =======================================
   // Quick Stats
@@ -93,30 +97,10 @@ export default function DashboardPage() {
   // Loading
   // =======================================
 
-  if (loading && !nutrition) {
+  if (loading && isLoadingDashboard && !nutrition && stats.pantryCount === 0) {
     return (
       <div className="flex items-center justify-center py-24">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  // =======================================
-  // Error
-  // =======================================
-
-  if (error) {
-    return (
-      <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-600">
-        <div className="flex items-start gap-3">
-          <AlertCircle size={22} className="mt-0.5 flex-shrink-0" />
-
-          <div>
-            <h2 className="font-bold mb-1">Could not load dashboard</h2>
-
-            <p>{error}</p>
-          </div>
-        </div>
+        <LoadingSpinner title="Loading dashboard" />
       </div>
     );
   }
@@ -127,6 +111,49 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* ================================= */}
+      {/* Error Banner - Non Blocking */}
+      {/* ================================= */}
+
+      {error && (
+        <section className="rounded-3xl border border-red-200 bg-red-50 p-5 text-red-700">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle size={22} className="mt-0.5 flex-shrink-0" />
+
+              <div>
+                <h2 className="font-bold mb-1">
+                  Some AI data could not be loaded
+                </h2>
+
+                <p className="text-sm leading-relaxed">{error}</p>
+              </div>
+            </div>
+
+            {clearError && (
+              <button
+                type="button"
+                onClick={clearError}
+                className="
+                  rounded-xl
+                  bg-white
+                  px-3
+                  py-2
+                  text-sm
+                  font-semibold
+                  text-red-700
+                  shadow-sm
+                  transition
+                  hover:bg-red-100
+                "
+              >
+                Dismiss
+              </button>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* ================================= */}
       {/* Header */}
       {/* ================================= */}
@@ -353,8 +380,11 @@ export default function DashboardPage() {
         </div>
 
         <div className="rounded-2xl bg-slate-50 border border-slate-200 p-6 text-slate-700 leading-relaxed">
-          {coaching ||
-            "No coaching generated yet. Open the AI Coach tab and click Generate AI Coaching."}
+          {typeof coaching === "string"
+            ? coaching ||
+              "No coaching generated yet. Open the AI Coach tab and click Generate AI Coaching."
+            : coaching?.summary ||
+              "No coaching generated yet. Open the AI Coach tab and click Generate AI Coaching."}
         </div>
       </section>
 

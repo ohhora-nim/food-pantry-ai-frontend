@@ -2,8 +2,15 @@
 // PantryContext.jsx
 // Frontend-owned pantry state using localStorage
 // Backend is stateless
-// Raw pantry foods are saved locally.
-// Enriched pantry foods come from backend.
+//
+// Raw pantry foods:
+// - saved in browser localStorage
+// - only name, quantity, expiry_date
+//
+// Enriched pantry foods:
+// - returned from backend
+// - category, processing_level, nutrition_tags,
+//   nutrition_score, expiry_score, priority_score, waste_risk
 // =========================================
 
 import {
@@ -93,6 +100,12 @@ function getFoodKey(food) {
   return `${food?.name || ""}-${food?.expiry_date || ""}`.trim().toLowerCase();
 }
 
+function getRecommendationKey(food) {
+  return String(food?.name || "")
+    .trim()
+    .toLowerCase();
+}
+
 // =========================================
 // Context
 // =========================================
@@ -106,9 +119,6 @@ const PantryContext = createContext(null);
 export function PantryProvider({ children }) {
   // =======================================
   // Raw Pantry Foods
-  // Stored in browser localStorage
-  // Contains:
-  // name, quantity, expiry_date
   // =======================================
 
   const [pantryFoods, setPantryFoods] = useState(() =>
@@ -117,11 +127,6 @@ export function PantryProvider({ children }) {
 
   // =======================================
   // Enriched Pantry Foods
-  // Returned from backend
-  // Contains:
-  // category, processing_level,
-  // nutrition_tags, nutrition_score,
-  // expiry_score, priority_score, waste_risk
   // =======================================
 
   const [enrichedPantryFoods, setEnrichedPantryFoods] = useState(() =>
@@ -129,7 +134,7 @@ export function PantryProvider({ children }) {
   );
 
   // =======================================
-  // AI / Intelligence Data
+  // Intelligence / AI Data
   // =======================================
 
   const [recommendations, setRecommendations] = useState(() =>
@@ -171,6 +176,14 @@ export function PantryProvider({ children }) {
   const [error, setError] = useState("");
 
   // =======================================
+  // Error helper
+  // =======================================
+
+  function clearError() {
+    setError("");
+  }
+
+  // =======================================
   // Persist raw pantry foods automatically
   // =======================================
 
@@ -179,7 +192,7 @@ export function PantryProvider({ children }) {
   }, [pantryFoods]);
 
   // =======================================
-  // Merge raw foods with backend enriched foods
+  // Merge raw foods with backend-enriched foods
   // Keeps frontend id for delete actions
   // =======================================
 
@@ -210,18 +223,11 @@ export function PantryProvider({ children }) {
 
   function mergeRecommendationsWithExisting(newRecommendations = []) {
     const existingMap = new Map(
-      recommendations.map((item) => [
-        String(item?.name || "")
-          .trim()
-          .toLowerCase(),
-        item,
-      ]),
+      recommendations.map((item) => [getRecommendationKey(item), item]),
     );
 
     return newRecommendations.map((item) => {
-      const key = String(item?.name || "")
-        .trim()
-        .toLowerCase();
+      const key = getRecommendationKey(item);
 
       const existing = existingMap.get(key);
 
@@ -239,9 +245,7 @@ export function PantryProvider({ children }) {
 
   // =======================================
   // Save fast dashboard results
-  // IMPORTANT:
-  // - Save enriched pantry foods separately
-  // - Preserve AI explanations
+  // No Gemma data generated here
   // =======================================
 
   function saveDashboardResults(data, sourceFoods = pantryFoods) {
@@ -282,8 +286,8 @@ export function PantryProvider({ children }) {
   }
 
   // =======================================
-  // Add pantry food locally
-  // Then request fast backend enrichment
+  // Add pantry food locally, then refresh
+  // fast backend intelligence
   // =======================================
 
   async function addPantryFood(foodData) {
@@ -299,8 +303,8 @@ export function PantryProvider({ children }) {
   }
 
   // =======================================
-  // Delete pantry food locally
-  // Then refresh backend enrichment
+  // Delete pantry food locally, then refresh
+  // fast backend intelligence
   // =======================================
 
   async function deletePantryFood(food) {
@@ -321,6 +325,9 @@ export function PantryProvider({ children }) {
       setRecommendations([]);
       setNutrition(null);
       setWaste(null);
+      setMeals([]);
+      setCoaching("");
+      setSummary("");
 
       saveToStorage(STORAGE_KEYS.enrichedPantryFoods, []);
 
@@ -330,13 +337,18 @@ export function PantryProvider({ children }) {
 
       saveToStorage(STORAGE_KEYS.waste, null);
 
+      saveToStorage(STORAGE_KEYS.meals, []);
+
+      saveToStorage(STORAGE_KEYS.coaching, "");
+
+      saveToStorage(STORAGE_KEYS.summary, "");
+
       return;
     }
 
     await fetchDashboard(nextFoods);
   }
 
-  // Alias for old components
   const removeFood = deletePantryFood;
 
   // =======================================
@@ -353,6 +365,8 @@ export function PantryProvider({ children }) {
     setCoaching("");
     setSummary("");
     setLastUpdated(null);
+    setError("");
+    setLoadingFeature("");
 
     Object.values(STORAGE_KEYS).forEach((key) => {
       removeFromStorage(key);
@@ -362,8 +376,6 @@ export function PantryProvider({ children }) {
   // =======================================
   // Fast dashboard fetch
   // No Gemma here
-  // Sends raw pantryFoods to backend
-  // Receives enrichedPantryFoods
   // =======================================
 
   const fetchDashboard = useCallback(
@@ -393,7 +405,7 @@ export function PantryProvider({ children }) {
   // =======================================
   // Refresh Recommendations
   // Fast rule-based, no Gemma
-  // Preserves existing AI explanations
+  // Preserves existing explanations
   // =======================================
 
   async function refreshRecommendations() {
@@ -470,7 +482,6 @@ export function PantryProvider({ children }) {
   // =======================================
   // Generate AI Meals
   // Gemma on demand
-  // Saves result to localStorage
   // =======================================
 
   async function generateMeals() {
@@ -499,7 +510,6 @@ export function PantryProvider({ children }) {
   // =======================================
   // Generate AI Coaching
   // Gemma on demand
-  // Saves result to localStorage
   // =======================================
 
   async function generateCoaching() {
@@ -528,7 +538,6 @@ export function PantryProvider({ children }) {
   // =======================================
   // Generate AI Summary
   // Gemma on demand
-  // Saves result to localStorage
   // =======================================
 
   async function generateSummary() {
@@ -555,7 +564,6 @@ export function PantryProvider({ children }) {
   // =======================================
   // Generate AI Explanations
   // Gemma on demand
-  // Saves explained recommendations
   // =======================================
 
   async function generateExplanations() {
@@ -568,18 +576,11 @@ export function PantryProvider({ children }) {
       const explained = data.recommendations || [];
 
       const explainedMap = new Map(
-        explained.map((item) => [
-          String(item?.name || "")
-            .trim()
-            .toLowerCase(),
-          item,
-        ]),
+        explained.map((item) => [getRecommendationKey(item), item]),
       );
 
       const mergedRecommendations = recommendations.map((item) => {
-        const key = String(item?.name || "")
-          .trim()
-          .toLowerCase();
+        const key = getRecommendationKey(item);
 
         const match = explainedMap.get(key);
 
@@ -601,8 +602,6 @@ export function PantryProvider({ children }) {
       setRecommendations(finalValue);
 
       saveToStorage(STORAGE_KEYS.recommendations, finalValue);
-
-      console.log("Saved explanations to localStorage:", finalValue);
     } catch (err) {
       console.error(err);
 
@@ -615,7 +614,6 @@ export function PantryProvider({ children }) {
   // =======================================
   // Generate all AI
   // Slow, optional
-  // Saves all outputs to localStorage
   // =======================================
 
   async function generateAllAI() {
@@ -658,7 +656,6 @@ export function PantryProvider({ children }) {
 
   // =======================================
   // Initial fast dashboard load
-  // Uses raw pantry foods from localStorage
   // =======================================
 
   useEffect(() => {
@@ -673,10 +670,10 @@ export function PantryProvider({ children }) {
     // Raw pantry data
     pantryFoods,
 
-    // Backend enriched pantry data for display
+    // Backend enriched pantry data
     enrichedPantryFoods,
 
-    // AI / intelligence data
+    // Intelligence / AI data
     recommendations,
     nutrition,
     waste,
@@ -689,6 +686,9 @@ export function PantryProvider({ children }) {
     loadingFeature,
     error,
     lastUpdated,
+
+    // Helpers
+    clearError,
 
     // Pantry actions
     addPantryFood,

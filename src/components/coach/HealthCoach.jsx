@@ -1,6 +1,7 @@
 // =========================================
 // HealthCoach.jsx
 // AI Health Coach Component
+// Supports structured coaching object from backend
 // =========================================
 
 import { useMemo } from "react";
@@ -46,8 +47,8 @@ function EmptyState() {
       </h2>
 
       <p className="text-slate-500 max-w-2xl mx-auto leading-relaxed">
-        Add pantry foods to receive personalized AI coaching for nutrition, food
-        quality, healthy habits, and long-term wellness.
+        Add pantry foods, then generate AI coaching to receive personalized
+        nutrition, fitness, hydration, and meal balance guidance.
       </p>
     </div>
   );
@@ -120,6 +121,7 @@ function ListCard({ icon: Icon, title, items = [], type = "positive" }) {
       bullet: "text-emerald-600",
       fallback: "No strengths detected yet.",
     },
+
     warning: {
       card: "border-amber-100 bg-amber-50",
       icon: "bg-amber-100 text-amber-600",
@@ -127,6 +129,7 @@ function ListCard({ icon: Icon, title, items = [], type = "positive" }) {
       bullet: "text-amber-600",
       fallback: "No major risks detected.",
     },
+
     recommendation: {
       card: "border-violet-100 bg-violet-50",
       icon: "bg-violet-100 text-violet-600",
@@ -280,28 +283,42 @@ export default function HealthCoach() {
       return null;
     }
 
-    // If backend returns plain string from optimized generate_coaching()
+    // =====================================
+    // If backend returns old plain string
+    // =====================================
+
     if (typeof coaching === "string") {
       return {
         health_score: nutrition?.pantry_health_score || 0,
-        strengths: [],
-        risks: [],
-        recommendations: [coaching],
-        nutrition_focus: nutrition?.processing_insight || "",
-        fitness_tip:
-          "Keep daily movement consistent and pair meals with balanced protein and vegetables.",
-        longevity_tip:
-          "Build sustainable eating habits with mostly fresh whole foods.",
-        hydration_tip: "Drink water regularly throughout the day.",
-        meal_balance_feedback:
-          "Aim for meals that include protein, fiber-rich foods, and fresh produce.",
+
         summary: coaching,
+
+        strengths: [],
+
+        risks: [],
+
+        recommendations: [],
+
+        nutrition_focus: nutrition?.processing_insight || "",
+
+        fitness_tip: "Add a short walk after meals when possible.",
+
+        hydration_tip: "Drink water regularly throughout the day.",
+
+        meal_balance_feedback:
+          "Aim for meals with protein, vegetables, and fiber.",
       };
     }
+
+    // =====================================
+    // Structured backend response
+    // =====================================
 
     return {
       health_score:
         coaching.health_score || nutrition?.pantry_health_score || 0,
+
+      summary: coaching.summary || "",
 
       strengths: coaching.strengths || [],
 
@@ -313,13 +330,9 @@ export default function HealthCoach() {
 
       fitness_tip: coaching.fitness_tip || "",
 
-      longevity_tip: coaching.longevity_tip || "",
-
       hydration_tip: coaching.hydration_tip || "",
 
       meal_balance_feedback: coaching.meal_balance_feedback || "",
-
-      summary: coaching.summary || "",
     };
   }, [coaching, nutrition]);
 
@@ -420,7 +433,7 @@ export default function HealthCoach() {
 
             <p className="mt-5 max-w-3xl text-lg text-violet-50 leading-relaxed">
               Personalized coaching to improve nutrition, reduce food waste,
-              support healthier habits, and build a smarter pantry lifestyle.
+              support healthy habits, and build a smarter pantry lifestyle.
             </p>
           </div>
 
@@ -561,12 +574,14 @@ export default function HealthCoach() {
       {/* Recommendations */}
       {/* ================================= */}
 
-      <ListCard
-        icon={Sparkles}
-        title="AI Recommendations"
-        items={normalizedCoaching.recommendations}
-        type="recommendation"
-      />
+      {normalizedCoaching.recommendations?.length > 0 && (
+        <ListCard
+          icon={Sparkles}
+          title="AI Recommendations"
+          items={normalizedCoaching.recommendations}
+          type="recommendation"
+        />
+      )}
 
       {/* ================================= */}
       {/* Coaching Insight Cards */}
@@ -588,77 +603,64 @@ export default function HealthCoach() {
         />
 
         <InsightCard
-          icon={ShieldCheck}
-          title="Longevity Tip"
-          text={normalizedCoaching.longevity_tip}
-          color="violet"
-        />
-
-        <InsightCard
           icon={Droplets}
           title="Hydration Tip"
           text={normalizedCoaching.hydration_tip}
           color="cyan"
         />
+
+        <InsightCard
+          icon={ShieldCheck}
+          title="Meal Balance"
+          text={normalizedCoaching.meal_balance_feedback}
+          color="violet"
+        />
       </section>
 
       {/* ================================= */}
-      {/* Meal Balance Feedback */}
+      {/* Waste / Urgency Note */}
       {/* ================================= */}
 
-      <section
-        className="
-          rounded-3xl
-          border
-          border-slate-200
-          bg-white
-          p-8
-          shadow-sm
-        "
-      >
-        <div className="flex items-center gap-3 mb-5">
-          <div
-            className="
-              w-12
-              h-12
-              rounded-2xl
-              bg-emerald-100
-              text-emerald-600
-              flex
-              items-center
-              justify-center
-            "
-          >
-            <Activity size={24} />
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-black text-slate-800">
-              Meal Balance Feedback
-            </h2>
-
-            <p className="text-slate-500">
-              AI feedback for better meal quality
-            </p>
-          </div>
-        </div>
-
-        <div
+      {urgentItems > 0 && (
+        <section
           className="
-            rounded-2xl
-            bg-emerald-50
+            rounded-3xl
             border
-            border-emerald-100
+            border-amber-200
+            bg-amber-50
             p-6
-            text-slate-700
-            leading-relaxed
-            text-lg
           "
         >
-          {normalizedCoaching.meal_balance_feedback ||
-            "Aim for balanced meals with protein, fiber-rich foods, and fresh produce."}
-        </div>
-      </section>
+          <div className="flex items-start gap-4">
+            <div
+              className="
+                w-12
+                h-12
+                rounded-2xl
+                bg-amber-100
+                text-amber-600
+                flex
+                items-center
+                justify-center
+                flex-shrink-0
+              "
+            >
+              <AlertTriangle size={24} />
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-black text-amber-900 mb-2">
+                Food Waste Attention
+              </h2>
+
+              <p className="text-slate-700 leading-relaxed">
+                You have {urgentItems} urgent item(s). Consider planning meals
+                around those foods first to reduce waste and save money.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ================================= */}
       {/* Bottom Message */}
@@ -697,9 +699,9 @@ export default function HealthCoach() {
             </h2>
 
             <p className="text-slate-300 leading-relaxed text-lg max-w-4xl">
-              Small improvements in pantry quality, fresh food intake, and food
-              waste reduction can support better health, save money, and build
-              long-term sustainable eating habits.
+              Small improvements in pantry quality, fresh food intake,
+              hydration, movement, and food waste reduction can support better
+              health, save money, and build long-term sustainable eating habits.
             </p>
           </div>
         </div>

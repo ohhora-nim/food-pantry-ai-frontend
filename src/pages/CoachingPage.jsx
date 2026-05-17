@@ -2,6 +2,10 @@
 // CoachingPage.jsx
 // AI Health Coaching Page
 // Calls backend POST /ai/coaching on button click
+// Supports structured coaching object:
+// summary, strengths, risks, recommendations,
+// nutrition_focus, fitness_tip, hydration_tip,
+// meal_balance_feedback
 // =========================================
 
 import { useMemo } from "react";
@@ -24,6 +28,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+// =========================================
+// Coaching Page
+// =========================================
+
 export default function CoachingPage() {
   const {
     coaching,
@@ -35,9 +43,21 @@ export default function CoachingPage() {
     generateCoaching,
   } = usePantry();
 
+  // =======================================
+  // Loading State
+  // =======================================
+
   const isGeneratingCoaching = loadingFeature === "coaching";
 
+  // =======================================
+  // Pantry Count
+  // =======================================
+
   const pantryCount = pantryFoods?.length || 0;
+
+  // =======================================
+  // Stats
+  // =======================================
 
   const stats = useMemo(() => {
     return {
@@ -47,9 +67,33 @@ export default function CoachingPage() {
 
       freshPercent: nutrition?.fresh_percent || 0,
 
+      ultraProcessedPercent: nutrition?.ultra_processed_percent || 0,
+
       pantryFoodsCount: pantryFoods?.length || 0,
     };
   }, [nutrition, pantryFoods]);
+
+  // =======================================
+  // Coaching Status
+  // =======================================
+
+  const hasCoaching = Boolean(coaching);
+
+  const hasStructuredCoaching = coaching && typeof coaching === "object";
+
+  const recommendationCount = hasStructuredCoaching
+    ? coaching.recommendations?.length || 0
+    : 0;
+
+  const strengthsCount = hasStructuredCoaching
+    ? coaching.strengths?.length || 0
+    : 0;
+
+  const risksCount = hasStructuredCoaching ? coaching.risks?.length || 0 : 0;
+
+  // =======================================
+  // Generate Coaching
+  // =======================================
 
   async function handleGenerateCoaching() {
     if (pantryCount === 0) {
@@ -59,6 +103,10 @@ export default function CoachingPage() {
     await generateCoaching();
   }
 
+  // =======================================
+  // Loading
+  // =======================================
+
   if (loading && !coaching && isGeneratingCoaching) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -66,6 +114,10 @@ export default function CoachingPage() {
       </div>
     );
   }
+
+  // =======================================
+  // Error
+  // =======================================
 
   if (error) {
     return (
@@ -83,9 +135,15 @@ export default function CoachingPage() {
     );
   }
 
+  // =======================================
+  // Render
+  // =======================================
+
   return (
     <div className="space-y-8">
+      {/* ================================= */}
       {/* Header */}
+      {/* ================================= */}
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
@@ -99,10 +157,15 @@ export default function CoachingPage() {
             </h1>
 
             <p className="text-slate-500 mt-1">
-              Personalized healthy eating and pantry coaching powered by AI.
+              Personalized pantry, nutrition, hydration, fitness, and meal
+              balance coaching.
             </p>
           </div>
         </div>
+
+        {/* ================================= */}
+        {/* Generate Button */}
+        {/* ================================= */}
 
         <button
           type="button"
@@ -144,7 +207,9 @@ export default function CoachingPage() {
         </button>
       </div>
 
+      {/* ================================= */}
       {/* No Pantry Warning */}
+      {/* ================================= */}
 
       {pantryCount === 0 && (
         <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-amber-800">
@@ -155,15 +220,17 @@ export default function CoachingPage() {
               <h2 className="font-bold mb-1">Add pantry foods first</h2>
 
               <p>
-                Go to the Pantry tab, add foods, then return here to generate AI
-                coaching.
+                Go to the Pantry tab, add foods, then return here to generate
+                personalized AI coaching.
               </p>
             </div>
           </div>
         </section>
       )}
 
+      {/* ================================= */}
       {/* AI Banner */}
+      {/* ================================= */}
 
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 p-8 text-white shadow-xl">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,white,transparent_40%)]" />
@@ -176,17 +243,42 @@ export default function CoachingPage() {
           </div>
 
           <p className="max-w-4xl text-lg leading-relaxed text-violet-50">
-            Click <span className="font-semibold">Generate AI Coaching</span> to
-            get personalized AI coaching based on your pantry foods, nutrition
-            balance, and food waste risk. Your coaching insights will be saved
-            so you can review them later.
+            Generate personalized AI coaching based on your pantry foods,
+            nutrition balance, and food waste risk. Your coaching insights will
+            be saved so you can review them later.
           </p>
         </div>
       </section>
 
+      {/* ================================= */}
+      {/* Coaching Status */}
+      {/* ================================= */}
+
+      {!hasCoaching && pantryCount > 0 && (
+        <section className="rounded-3xl border border-violet-200 bg-violet-50 p-6 text-violet-800">
+          <div className="flex items-start gap-3">
+            <Brain size={22} className="mt-0.5 flex-shrink-0" />
+
+            <div>
+              <h2 className="font-bold mb-1">No coaching generated yet</h2>
+
+              <p>
+                Click Generate AI Coaching to receive strengths, risks,
+                recommendations, nutrition focus, fitness guidance, hydration
+                tips, and meal balance feedback.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ================================= */}
       {/* Stats */}
+      {/* ================================= */}
 
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* Health Score */}
+
         <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm hover:shadow-lg transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
@@ -200,6 +292,8 @@ export default function CoachingPage() {
 
           <p className="text-slate-500 mt-2">Pantry Health Score</p>
         </div>
+
+        {/* Nutrition */}
 
         <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm hover:shadow-lg transition-all">
           <div className="flex items-center justify-between mb-4">
@@ -215,6 +309,8 @@ export default function CoachingPage() {
           <p className="text-slate-500 mt-2">Avg Nutrition Score</p>
         </div>
 
+        {/* Fresh Foods */}
+
         <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm hover:shadow-lg transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-600 flex items-center justify-center">
@@ -226,8 +322,10 @@ export default function CoachingPage() {
 
           <h2 className="text-4xl font-bold">{stats.freshPercent}%</h2>
 
-          <p className="text-slate-500 mt-2">Whole Foods</p>
+          <p className="text-slate-500 mt-2">Fresh Whole Foods</p>
         </div>
+
+        {/* Pantry Foods */}
 
         <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm hover:shadow-lg transition-all">
           <div className="flex items-center justify-between mb-4">
@@ -244,9 +342,43 @@ export default function CoachingPage() {
         </div>
       </section>
 
+      {/* ================================= */}
+      {/* Structured Coaching Stats */}
+      {/* ================================= */}
+
+      {hasStructuredCoaching && (
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
+            <p className="text-sm text-slate-500 mb-2">Strengths</p>
+
+            <h2 className="text-4xl font-black text-emerald-600">
+              {strengthsCount}
+            </h2>
+          </div>
+
+          <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
+            <p className="text-sm text-slate-500 mb-2">Risks</p>
+
+            <h2 className="text-4xl font-black text-amber-600">{risksCount}</h2>
+          </div>
+
+          <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
+            <p className="text-sm text-slate-500 mb-2">Recommendations</p>
+
+            <h2 className="text-4xl font-black text-violet-600">
+              {recommendationCount}
+            </h2>
+          </div>
+        </section>
+      )}
+
+      {/* ================================= */}
       {/* Coaching Benefits */}
+      {/* ================================= */}
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Healthy Eating */}
+
         <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
           <div className="w-14 h-14 rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-5">
             <Salad size={28} />
@@ -255,23 +387,27 @@ export default function CoachingPage() {
           <h2 className="text-2xl font-bold mb-3">Healthy Eating</h2>
 
           <p className="text-slate-600 leading-relaxed">
-            AI recommends healthier pantry choices, nutrient-dense foods, and
-            balanced eating habits.
+            AI reviews your pantry and suggests practical ways to improve food
+            quality and meal balance.
           </p>
         </div>
+
+        {/* Fitness */}
 
         <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
           <div className="w-14 h-14 rounded-3xl bg-orange-100 text-orange-600 flex items-center justify-center mb-5">
             <Dumbbell size={28} />
           </div>
 
-          <h2 className="text-2xl font-bold mb-3">Daily Energy</h2>
+          <h2 className="text-2xl font-bold mb-3">Fitness Support</h2>
 
           <p className="text-slate-600 leading-relaxed">
-            AI helps optimize meal quality for energy, productivity, and
-            sustainable nutrition.
+            Coaching includes safe, realistic fitness suggestions that pair with
+            better eating habits.
           </p>
         </div>
+
+        {/* Wellness */}
 
         <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
           <div className="w-14 h-14 rounded-3xl bg-violet-100 text-violet-600 flex items-center justify-center mb-5">
@@ -281,20 +417,23 @@ export default function CoachingPage() {
           <h2 className="text-2xl font-bold mb-3">Long-Term Wellness</h2>
 
           <p className="text-slate-600 leading-relaxed">
-            Smart pantry coaching encourages healthier routines and improved
-            food awareness.
+            Smart pantry coaching encourages sustainable routines and better
+            everyday food decisions.
           </p>
         </div>
       </section>
 
+      {/* ================================= */}
       {/* Coaching Dashboard */}
+      {/* ================================= */}
 
       <section className="rounded-3xl bg-white border border-slate-200 p-6 sm:p-8 shadow-sm">
         <div className="mb-6">
           <h2 className="text-2xl font-bold">Personalized AI Coaching</h2>
 
           <p className="text-slate-500 mt-1">
-            AI-generated personalized health and nutrition guidance.
+            AI-generated personalized health, nutrition, fitness, hydration, and
+            meal balance guidance.
           </p>
         </div>
 
@@ -307,7 +446,9 @@ export default function CoachingPage() {
         )}
       </section>
 
+      {/* ================================= */}
       {/* Bottom Message */}
+      {/* ================================= */}
 
       <section className="rounded-3xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 p-8 text-white shadow-xl">
         <div className="flex items-start gap-5">
@@ -321,9 +462,9 @@ export default function CoachingPage() {
             </h2>
 
             <p className="max-w-4xl text-violet-50 leading-relaxed text-lg">
-              Consistent healthy food choices, better pantry awareness, and
-              reduced ultra-processed foods can improve long-term wellness,
-              energy, and healthy eating habits.
+              Consistent healthy food choices, better hydration, realistic
+              movement, and reduced food waste can improve long-term wellness,
+              energy, and daily eating habits.
             </p>
           </div>
         </div>
