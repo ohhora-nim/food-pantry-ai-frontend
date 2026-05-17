@@ -177,9 +177,9 @@ export default function CoachingPage() {
 
           <p className="max-w-4xl text-lg leading-relaxed text-violet-50">
             Click <span className="font-semibold">Generate AI Coaching</span> to
-            call the backend{" "}
-            <span className="font-semibold">POST /ai/coaching</span> endpoint.
-            The result will be saved in your browser localStorage.
+            get personalized AI coaching based on your pantry foods, nutrition
+            balance, and food waste risk. Your coaching insights will be saved
+            so you can review them later.
           </p>
         </div>
       </section>
